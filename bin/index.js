@@ -46,8 +46,24 @@ async function callJev(state, questions, model = "jev-latest") {
   return await response.json();
 }
 
+function splitQueryTokens(query) {
+  const tokens = new Set();
+  const rawWords = query.split(/[\s_]+/);
+  for (const w of rawWords) {
+    if (!w) continue;
+    tokens.add(w.toLowerCase());
+    // Split camelCase / PascalCase
+    const sub = w.match(/[A-Z]?[a-z]+|[A-Z]+(?=[A-Z][a-z]|\d|\W|$)|[0-9]+/g) || [];
+    for (const s of sub) {
+      if (s.length > 1) tokens.add(s.toLowerCase());
+    }
+  }
+  return [...tokens].filter(t => t.length > 1);
+}
+
 function findCandidates(rootDir, query, maxCandidates = 25) {
-  const words = query.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+  const tokens = splitQueryTokens(query);
+  const rawLower = query.toLowerCase();
   const candidates = [];
 
   function walk(dir) {
@@ -64,10 +80,21 @@ function findCandidates(rootDir, query, maxCandidates = 25) {
             const fname = entry.name.toLowerCase();
             const fpath = path.join(dir, entry.name).toLowerCase();
             let score = 0;
-            for (const w of words) {
-              if (fname.includes(w)) score += 3;
-              if (fpath.includes(w)) score += 1;
+            if (fname.includes(rawLower)) score += 50;
+            for (const w of tokens) {
+              if (fname.includes(w)) score += 8;
+              if (fpath.includes(w)) score += 2;
             }
+
+            try {
+              const content = fs.readFileSync(path.join(dir, entry.name), "utf-8");
+              const contentLower = content.toLowerCase();
+              if (contentLower.includes(rawLower)) score += 40;
+              for (const w of tokens) {
+                if (contentLower.includes(w)) score += 1;
+              }
+            } catch (_) {}
+
             if (score > 0 || candidates.length < 60) {
               candidates.push({ score, fullPath: path.join(dir, entry.name) });
             }
