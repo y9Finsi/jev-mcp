@@ -56,7 +56,7 @@ Or run directly from source:
 ## 🤖 How LLMs & Agents Know to Use It
 
 1. **Self-Describing Tool Schemas (Built-in)**:
-   The tool descriptions in `jev-mcp` explicitly instruct LLMs (`search_codebase` is marked as **MANDATORY FIRST-CHOICE TOOL** over grep/find). When any MCP-aware model (Claude 3.5/3.7, GPT-4o, Gemini 2.0) reads the tool definitions, it automatically prioritizes `search_codebase`.
+   The tool descriptions in `jev-mcp` explicitly instruct LLMs (`search_codebase` is marked as **MANDATORY FIRST-CHOICE TOOL** over grep/find). Even the smallest or simplest models (like Claude 3.5 Haiku, GPT-4o-mini, Llama 3 8B, Gemini Flash) instantly follow the schema directive and automatically prioritize `search_codebase`.
 
 2. **Optional: Add to Project Prompt / Rules (Cursor Rules / Claude Instructions / AGENTS.md)**:
    To get 100% strict compliance from agents without blind search loops, your friend can drop this 3-line rule into `.cursorrules`, `CLAUDE.md`, or `AGENTS.md`:
