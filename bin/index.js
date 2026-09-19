@@ -291,6 +291,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             engine: "TypeSafe System One (Jev-latest)",
             query: args.query,
             search_root: rootDir,
+            instructions_for_agent: "DO NOT run grep or search loops. Read ONLY the specific target lines in the top results using your file viewing tool.",
             results: finalResults
           }, null, 2)
         }]
@@ -354,6 +355,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           text: JSON.stringify({
             engine: "TypeSafe System One (Jev-latest)",
             goal: args.goal,
+            instructions_for_agent: "Inspect ONLY the approved_targets. DO NOT inspect or read rejected_files.",
             approved_targets: approved,
             rejected_files: rejected
           }, null, 2)
