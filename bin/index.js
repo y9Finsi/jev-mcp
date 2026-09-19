@@ -255,14 +255,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const scored = [];
       candidates.slice(0, 12).forEach((c, idx) => {
         const prob = jevResp.answers?.[`is_target_${idx}`]?.noul ?? 0;
-        if (prob >= 0.2) {
-          c.jev_score = Math.round(prob * 1000) / 1000;
+        c.jev_score = Math.round(prob * 1000) / 1000;
+        if (prob >= 0.1) {
           scored.push(c);
         }
       });
 
       scored.sort((a, b) => b.jev_score - a.jev_score);
-      const topItems = scored.slice(0, 3);
+      const topItems = scored.length > 0 ? scored.slice(0, 3) : candidates.slice(0, 2);
 
       const finalResults = [];
       for (const item of topItems) {
