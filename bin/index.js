@@ -326,7 +326,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             engine: "TypeSafe System One (Jev-latest)",
             query: args.query,
             search_root: rootDir,
-            instructions_for_agent: "DO NOT run grep or search loops. Read ONLY the specific target lines in the top results using your file viewing tool.",
+            next_action_steps: [
+              "1. Inspect the top 1-2 results below. Each result has an exact 'path' and 'target.line'.",
+              "2. Use your file viewing tool (e.g. view_file) to read ONLY around that line range (e.g. startLine = target.line, endLine = target.line + 40).",
+              "3. DO NOT run grep_search, find_by_name, or scan other directories — the exact implementation entry points are already found below."
+            ],
             results: finalResults
           }, null, 2)
         }]
@@ -390,7 +394,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           text: JSON.stringify({
             engine: "TypeSafe System One (Jev-latest)",
             goal: args.goal,
-            instructions_for_agent: "Inspect ONLY the approved_targets. DO NOT inspect or read rejected_files.",
+            next_action_steps: [
+              "1. Focus ONLY on 'approved_targets'. They are verified by Jev to contain the core logic for your goal.",
+              "2. DO NOT read or inspect 'rejected_files' — they are false positives.",
+              "3. Proceed to view or edit the approved files directly."
+            ],
             approved_targets: approved,
             rejected_files: rejected
           }, null, 2)
