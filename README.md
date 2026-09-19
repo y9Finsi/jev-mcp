@@ -12,6 +12,7 @@ Traditional AI agents waste thousands of tokens doing blind `grep_search` and ge
 
 1. **`search_codebase`**: Semantic search across any repo and any language (Kotlin, Go, TS, Python, Swift, Rust, etc.). Returns exact file paths, target methods, and line numbers.
 2. **`validate_code_targets`**: Anti-hallucination filter. When an agent guesses 10 candidate files, Jev discards 80% of false positives and pinpoints exact lines in valid files.
+3. **`judge_with_jev`**: Direct System One AI judgments (Choice, Noul, Score). Compare architectural trade-offs, evaluate UI/Figma design fidelity, or verify code invariants at sub-200ms speed without hallucinations.
 
 ---
 

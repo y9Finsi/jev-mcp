@@ -190,6 +190,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["goal", "candidate_files"]
         }
+      },
+      {
+        name: "judge_with_jev",
+        description: "Execute fast System One AI judgment (sub-200ms) on code, architecture, or UI. Supports Choice (pick between approaches/methods), Noul (verify if condition/claim holds true), and Score (rate quality/fidelity on an ordered scale).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            instructions: { type: "string", description: "The core question or judgment prompt (e.g. 'Does this snippet implement 120 FPS momentum scrolling?' or 'Which pattern should be used?')" },
+            primitive: {
+              type: "string",
+              enum: ["choice", "noul", "score"],
+              description: "Type of judgment: 'choice' (pick one category/option), 'noul' (binary probability 0..1), 'score' (continuous rating along ordered levels)"
+            },
+            criteria: {
+              description: "For 'choice': object mapping option names to descriptions. For 'noul': optional object with true/false descriptions. For 'score': array of strings describing ascending levels.",
+              type: ["object", "array"]
+            },
+            context: {
+              description: "Code snippet, UI properties, or state to evaluate (string or structured object)",
+              type: ["string", "object"]
+            }
+          },
+          required: ["instructions", "primitive"]
+        }
       }
     ]
   };
@@ -358,6 +382,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             instructions_for_agent: "Inspect ONLY the approved_targets. DO NOT inspect or read rejected_files.",
             approved_targets: approved,
             rejected_files: rejected
+          }, null, 2)
+        }]
+      };
+    }
+
+    if (name === "judge_with_jev") {
+      const { instructions, primitive, criteria, context } = args;
+      const state = typeof context === "object" ? context : { content: context || "" };
+
+      const questionObj = {
+        type: primitive.toLowerCase(),
+        instructions
+      };
+
+      if (criteria) {
+        questionObj.criteria = criteria;
+      } else if (primitive.toLowerCase() === "noul") {
+        questionObj.criteria = {
+          true: "The condition holds true and is fully satisfied.",
+          false: "The condition does not hold or is not met."
+        };
+      }
+
+      const jevResp = await callJev(state, { judgment: questionObj });
+      const answer = jevResp.answers?.judgment;
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            engine: "TypeSafe System One (Jev-latest)",
+            primitive,
+            instructions,
+            result: answer,
+            usage: jevResp.usage
           }, null, 2)
         }]
       };
