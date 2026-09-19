@@ -235,19 +235,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       candidates.slice(0, 12).forEach((c, idx) => {
         questions[`is_target_${idx}`] = {
           type: "noul",
-          instructions: `The user wants to find code or documentation for: '${args.query}'. Does file '${c.relPath}' with symbols [${c.symbols.join(", ")}] directly implement or define this?`,
+          instructions: `Evaluate if this source file directly contains the declaration, implementation, or primary logic for the requested query: '${args.query}'.`,
           criteria: {
-            true: "Yes, this file directly contains the core logic or UI implementation.",
-            false: "No, this file is unrelated or just an indirect dependency."
+            true: `The file defines, implements, or coordinates '${args.query}' (e.g. core UI component, domain logic, data models, or API handler).`,
+            false: `The file only makes incidental reference, is an unrelated test/dependency, or does not implement the core logic for '${args.query}'.`
           }
         };
       });
 
       const jevResp = await callJev(
         {
-          query: args.query,
-          root_context: rootDir,
-          files: candidates.slice(0, 12).map((c, idx) => ({ id: `is_target_${idx}`, path: c.relPath, symbols: c.symbols }))
+          search_intent: "Identify source files that implement the target feature or symbol",
+          target_query: args.query,
+          root_directory: rootDir,
+          candidate_files: candidates.slice(0, 12).map((c, idx) => ({
+            id: `is_target_${idx}`,
+            file_path: c.relPath,
+            defined_symbols: c.symbols,
+            code_preview: c.sample.slice(0, 300)
+          }))
         },
         questions
       );
@@ -285,11 +291,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           });
 
           const choiceResp = await callJev(
-            { query: args.query, file: item.relPath },
+            {
+              search_query: args.query,
+              file_path: item.relPath,
+              file_type: path.extname(item.path),
+              overview: item.sample.slice(0, 400)
+            },
             {
               pick: {
                 type: "choice",
-                instructions: `Which symbol/function in '${item.relPath}' is the primary entry point for: '${args.query}'?`,
+                instructions: `Identify which function, method, or class in '${item.relPath}' serves as the primary implementation or entry point for: '${args.query}'.`,
                 criteria
               }
             }
