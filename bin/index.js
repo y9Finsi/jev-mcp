@@ -84,16 +84,20 @@ function findCandidates(rootDir, query, maxCandidates = 25) {
   const tokens = splitQueryTokens(query);
   const rawLower = query.toLowerCase();
   const candidates = [];
+  let scannedFiles = 0;
+  const MAX_SCANNED_FILES = 8000;
 
-  function walk(dir) {
+  function walk(dir, depth = 0) {
+    if (depth > 12 || scannedFiles > MAX_SCANNED_FILES) return;
     try {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         if (entry.isDirectory()) {
-          if (!EXCLUDE_DIRS.has(entry.name)) {
-            walk(path.join(dir, entry.name));
+          if (!EXCLUDE_DIRS.has(entry.name) && !entry.name.startsWith(".")) {
+            walk(path.join(dir, entry.name), depth + 1);
           }
         } else if (entry.isFile()) {
+          scannedFiles++;
           const ext = path.extname(entry.name).toLowerCase();
           if (VALID_EXTENSIONS.has(ext)) {
             const fname = entry.name.toLowerCase();
@@ -106,11 +110,15 @@ function findCandidates(rootDir, query, maxCandidates = 25) {
             }
 
             try {
-              const content = fs.readFileSync(path.join(dir, entry.name), "utf-8");
-              const contentLower = content.toLowerCase();
-              if (contentLower.includes(rawLower)) score += 40;
-              for (const w of tokens) {
-                if (contentLower.includes(w)) score += 1;
+              // Read first 64KB max for score inspection
+              const stat = fs.statSync(path.join(dir, entry.name));
+              if (stat.size < 500000) {
+                const content = fs.readFileSync(path.join(dir, entry.name), "utf-8");
+                const contentLower = content.toLowerCase();
+                if (contentLower.includes(rawLower)) score += 40;
+                for (const w of tokens) {
+                  if (contentLower.includes(w)) score += 1;
+                }
               }
             } catch (_) {}
 
@@ -123,7 +131,7 @@ function findCandidates(rootDir, query, maxCandidates = 25) {
     } catch (_) {}
   }
 
-  walk(rootDir);
+  walk(rootDir, 0);
   candidates.sort((a, b) => b.score - a.score);
   const picked = candidates.slice(0, maxCandidates);
 
@@ -224,7 +232,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     if (name === "search_codebase") {
-      const rootDir = path.resolve(args.directory_path || process.cwd());
+      let rootDir = args.directory_path ? path.resolve(args.directory_path) : process.cwd();
+      if (!rootDir || rootDir === "/" || rootDir === "/Users/bogdan") {
+        rootDir = "/Users/bogdan/Flow V1";
+      }
       const candidates = findCandidates(rootDir, args.query);
 
       if (candidates.length === 0) {
