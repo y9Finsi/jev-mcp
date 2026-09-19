@@ -53,6 +53,22 @@ Or run directly from source:
 
 ---
 
+## 🤖 How LLMs & Agents Know to Use It
+
+1. **Self-Describing Tool Schemas (Built-in)**:
+   The tool descriptions in `jev-mcp` explicitly instruct LLMs (`search_codebase` is marked as **MANDATORY FIRST-CHOICE TOOL** over grep/find). When any MCP-aware model (Claude 3.5/3.7, GPT-4o, Gemini 2.0) reads the tool definitions, it automatically prioritizes `search_codebase`.
+
+2. **Optional: Add to Project Prompt / Rules (Cursor Rules / Claude Instructions / AGENTS.md)**:
+   To get 100% strict compliance from agents without blind search loops, your friend can drop this 3-line rule into `.cursorrules`, `CLAUDE.md`, or `AGENTS.md`:
+
+```markdown
+### Code Intelligence (Jev MCP)
+- Always use `search_codebase` instead of blind `grep` or file listings when exploring codebase features, classes, or symbols.
+- Before reading/editing multiple guessed files, call `validate_code_targets` to verify relevance and get exact line coordinates.
+```
+
+---
+
 ## License
 
 MIT © [y9Finsi](https://github.com/y9Finsi)
