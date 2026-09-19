@@ -1,0 +1,29 @@
+{
+  "name": "jev-mcp",
+  "version": "1.0.0",
+  "description": "Universal MCP Server & Semantic Code Intelligence powered by TypeSafe Jev (System One)",
+  "main": "bin/index.js",
+  "bin": {
+    "jev-mcp": "./bin/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "typesafe",
+    "jev",
+    "system-one",
+    "ai-agent",
+    "code-search",
+    "semantic-search",
+    "antigravity",
+    "cursor",
+    "claude-code"
+  ],
+  "author": "y9Finsi",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
