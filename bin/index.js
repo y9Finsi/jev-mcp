@@ -11,8 +11,27 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import fs from "fs";
 import path from "path";
 
-const API_KEY = process.env.TYPESAFE_API_KEY;
-const API_ENDPOINT = process.env.TYPESAFE_ENDPOINT || "https://api.typesafe.ai/v1/system_one";
+let API_KEY = process.env.TYPESAFE_API_KEY;
+if (!API_KEY) {
+  const envCandidates = [
+    path.join(process.cwd(), ".env"),
+    "/Users/bogdan/Flow V1/.env",
+    path.join(process.env.HOME || "", ".env")
+  ];
+  for (const envPath of envCandidates) {
+    if (fs.existsSync(envPath)) {
+      const lines = fs.readFileSync(envPath, "utf-8").split("\n");
+      for (const line of lines) {
+        if (line.startsWith("TYPESAFE_API_KEY=")) {
+          API_KEY = line.split("=")[1].trim().replace(/^["']|["']$/g, "");
+          break;
+        }
+      }
+      if (API_KEY) break;
+    }
+  }
+}
+const API_ENDPOINT = process.env.TYPESAFE_ENDPOINT || "https://api.typesafe.ai/v1/systemone";
 
 const EXCLUDE_DIRS = new Set([
   "node_modules", ".git", ".gradle", "build", ".idea", ".next", "dist",

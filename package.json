@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Universal MCP Server & Semantic Code Intelligence powered by TypeSafe Jev (System One)",
   "main": "bin/index.js",
+  "type": "module",
   "bin": {
     "jev-mcp": "./bin/index.js"
   },
