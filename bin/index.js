@@ -13,21 +13,38 @@ import path from "path";
 
 let API_KEY = process.env.TYPESAFE_API_KEY;
 if (!API_KEY) {
-  const envCandidates = [
-    path.join(process.cwd(), ".env"),
-    "/Users/bogdan/Flow V1/.env",
-    path.join(process.env.HOME || "", ".env")
-  ];
-  for (const envPath of envCandidates) {
-    if (fs.existsSync(envPath)) {
-      const lines = fs.readFileSync(envPath, "utf-8").split("\n");
-      for (const line of lines) {
-        if (line.startsWith("TYPESAFE_API_KEY=")) {
-          API_KEY = line.split("=")[1].trim().replace(/^["']|["']$/g, "");
-          break;
+  // Universally traverse up from cwd or home to find nearest .env
+  let cur = process.cwd();
+  for (let i = 0; i < 5; i++) {
+    const envCandidate = path.join(cur, ".env");
+    if (fs.existsSync(envCandidate)) {
+      try {
+        const lines = fs.readFileSync(envCandidate, "utf-8").split("\n");
+        for (const line of lines) {
+          if (line.startsWith("TYPESAFE_API_KEY=")) {
+            API_KEY = line.split("=")[1].trim().replace(/^["']|["']$/g, "");
+            break;
+          }
         }
-      }
+      } catch (_) {}
       if (API_KEY) break;
+    }
+    const parent = path.dirname(cur);
+    if (parent === cur) break;
+    cur = parent;
+  }
+  if (!API_KEY && process.env.HOME) {
+    const homeEnv = path.join(process.env.HOME, ".env");
+    if (fs.existsSync(homeEnv)) {
+      try {
+        const lines = fs.readFileSync(homeEnv, "utf-8").split("\n");
+        for (const line of lines) {
+          if (line.startsWith("TYPESAFE_API_KEY=")) {
+            API_KEY = line.split("=")[1].trim().replace(/^["']|["']$/g, "");
+            break;
+          }
+        }
+      } catch (_) {}
     }
   }
 }
@@ -233,8 +250,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     if (name === "search_codebase") {
       let rootDir = args.directory_path ? path.resolve(args.directory_path) : process.cwd();
-      if (!rootDir || rootDir === "/" || rootDir === "/Users/bogdan") {
-        rootDir = "/Users/bogdan/Flow V1";
+      // If client ran MCP from root filesystem /, safeguard by checking process env or current target
+      if (!rootDir || rootDir === "/" || rootDir === "/System" || rootDir === "/Library") {
+        rootDir = process.env.PWD || process.cwd();
+      }
+      if (rootDir === "/" || rootDir === "/Users") {
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({ error: "Please provide 'directory_path' parameter pointing to your workspace/project directory." })
+          }],
+          isError: true
+        };
       }
       const candidates = findCandidates(rootDir, args.query);
 

@@ -5,7 +5,7 @@ You have access to the `jev-intelligence` MCP server (`search_codebase`, `valida
 ## HOW TO EXPLORE & NAVIGATE CODE:
 1. **CALL `search_codebase` FIRST**:
    - DO NOT start by running `grep_search` or `find_by_name`.
-   - Call `jev-intelligence:search_codebase` with your query or symbol.
+   - Call `jev-intelligence:search_codebase` with your `query` (symbol/feature) and pass `directory_path` set to your current project/workspace root directory.
 2. **FOLLOW THE RETURNED `next_action_steps`**:
    - The result contains top-ranked files with exact coordinates (`path` and `target.line`).
    - Immediately use your file viewing tool (e.g. `view_file`) on the top 1-2 files at `target.line`.

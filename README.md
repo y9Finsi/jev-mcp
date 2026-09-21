@@ -64,7 +64,7 @@ Or run directly from source:
 
 ```markdown
 ### Code Intelligence (Jev MCP)
-- Always use `search_codebase` instead of blind `grep` or file listings when exploring codebase features, classes, or symbols.
+- Always use `search_codebase` (specifying `query` and your project's root `directory_path`) instead of blind `grep` or file listings when exploring features, classes, or symbols.
 - Before reading/editing multiple guessed files, call `validate_code_targets` to verify relevance and get exact line coordinates.
 ```
 
